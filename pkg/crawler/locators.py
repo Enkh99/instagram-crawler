@@ -29,4 +29,3 @@ class InstaLocators(object):
     PROFILE_PICTURE_URL = (By.XPATH, "//span[@tabindex='-1']//img[@data-testid='user-avatar']/@src")
 
     # Wait checking XPATH here
-    

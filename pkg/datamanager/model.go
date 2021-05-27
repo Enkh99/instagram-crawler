@@ -14,6 +14,123 @@ func GetScrapedData(db *sql.DB, userID int) (*ScrapedData, error) {
 	}
 	return data, nil
 }
+func GetFollowers(db *sql.DB, userID int) ([]string, error) {
+	var followers []string
+
+	query := "select follower_account from followers where user_id=$1"
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var follower string
+		if err := rows.Scan(&follower); err != nil {
+			return nil, err
+		}
+		followers = append(followers, follower)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return followers, nil
+}
+func GetFollowings(db *sql.DB, userID int) ([]string, error) {
+	var followings []string
+	query := "select following_account from followings where user_id=$1"
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var following string
+		if err := rows.Scan(&following); err != nil {
+			return nil, err
+		}
+		followings = append(followings, following)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return followings, nil
+}
+
+func Difference(ss1 []string, ss2 []string) []string {
+	var diff []string
+
+	// Loop two times, first to find slice1 strings not in slice2,
+	// second loop to find slice2 strings not in slice1
+	for _, s1 := range ss1 {
+		found := false
+		for _, s2 := range ss2 {
+			if s1 == s2 {
+				found = true
+				break
+			}
+		}
+		// String not found. We add it to return slice
+		if !found {
+			diff = append(diff, s1)
+		}
+	}
+
+	return diff
+}
+func GetNewFollowers(db *sql.DB, userID int) ([]string, error) {
+	var newfollowers []string
+
+	query := "select username from added_followers where user_id=$1"
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var newfollower string
+		if err := rows.Scan(&newfollower); err != nil {
+			return nil, err
+		}
+		newfollowers = append(newfollowers, newfollower)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return newfollowers, nil
+}
+func GetLostFollowers(db *sql.DB, userID int) ([]string, error) {
+	var lostfollowers []string
+
+	query := "select username from lost_followers where user_id=$1"
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var lostfollower string
+		if err := rows.Scan(&lostfollower); err != nil {
+			return nil, err
+		}
+		lostfollowers = append(lostfollowers, lostfollower)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return lostfollowers, nil
+}
 
 // func New(db *sql.DB, loc *time.Location) *ScrapedData {
 // 	return &ScrapedData{

@@ -14,6 +14,8 @@ func (app *application) routes() *chi.Mux {
 
 	r.With(app.authenticate).Route("/api", func(r chi.Router) {
 		r.Get("/scraped-data", app.GetScrapedDataHandler)
+		r.Get("/follow-diff", app.GetFollowDiff)
+
 	})
 
 	r.Route("/pub", func(r chi.Router) {

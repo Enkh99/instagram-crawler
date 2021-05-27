@@ -5,8 +5,8 @@ CREATE TABLE public.users (
                 user_id BIGINT NOT NULL DEFAULT nextval('public.users_user_id_seq'),
                 username TEXT NOT NULL,
                 password TEXT NOT NULL,
-                link TEXT NOT NULL,
-                created_date TIMESTAMP NOT NULL,
+                link TEXT DEFAULT '' NOT NULL,
+                created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 is_active BOOLEAN NOT NULL,
                 is_deleted BOOLEAN NOT NULL,
                 CONSTRAINT users_pk PRIMARY KEY (user_id)
@@ -14,6 +14,32 @@ CREATE TABLE public.users (
 
 
 ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
+
+CREATE SEQUENCE public.lost_followers_id_seq;
+
+CREATE TABLE public.lost_followers (
+                id BIGINT NOT NULL DEFAULT nextval('public.lost_followers_id_seq'),
+                user_id BIGINT NOT NULL,
+                username TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                CONSTRAINT lost_followers_pk PRIMARY KEY (id)
+);
+
+
+ALTER SEQUENCE public.lost_followers_id_seq OWNED BY public.lost_followers.id;
+
+CREATE SEQUENCE public.added_followers_id_seq;
+
+CREATE TABLE public.added_followers (
+                id BIGINT NOT NULL DEFAULT nextval('public.added_followers_id_seq'),
+                user_id BIGINT NOT NULL,
+                username TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                CONSTRAINT added_followers_pk PRIMARY KEY (id)
+);
+
+
+ALTER SEQUENCE public.added_followers_id_seq OWNED BY public.added_followers.id;
 
 CREATE SEQUENCE public.post_id_seq;
 
@@ -38,12 +64,11 @@ CREATE TABLE public.scraped_data (
                 user_id BIGINT NOT NULL,
                 created_at TIMESTAMP NOT NULL,
                 name TEXT NOT NULL,
-                link_id TEXT NOT NULL,
-                followers INTEGER NOT NULL,
+                follower INTEGER NOT NULL,
                 following INTEGER NOT NULL,
                 post_number INTEGER NOT NULL,
                 total_comment INTEGER NOT NULL,
-                total_likes INTEGER NOT NULL,
+                total_like INTEGER NOT NULL,
                 CONSTRAINT scraped_data_pk PRIMARY KEY (id)
 );
 
@@ -96,6 +121,20 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.post ADD CONSTRAINT user_post_fk
+FOREIGN KEY (user_id)
+REFERENCES public.users (user_id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.added_followers ADD CONSTRAINT users_added_followers_fk
+FOREIGN KEY (user_id)
+REFERENCES public.users (user_id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.lost_followers ADD CONSTRAINT users_lost_followers_fk
 FOREIGN KEY (user_id)
 REFERENCES public.users (user_id)
 ON DELETE NO ACTION

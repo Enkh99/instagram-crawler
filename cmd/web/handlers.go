@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"enkhod.net/snippetbox/pkg/datamanager"
@@ -71,4 +72,66 @@ func (app *application) GetScrapedDataHandler(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(scrapedData)
+}
+func (app *application) GetFollowDiff(w http.ResponseWriter, r *http.Request) {
+	ss1, err := datamanager.GetFollowers(app.db, app.session.GetInt(r, "userID"))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("null"))
+			return
+		} else {
+			panic(err)
+		}
+	}
+	ss2, err := datamanager.GetFollowings(app.db, app.session.GetInt(r, "userID"))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("null"))
+			return
+		} else {
+			panic(err)
+		}
+	}
+	new, err := datamanager.GetNewFollowers(app.db, app.session.GetInt(r, "userID"))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("null"))
+			return
+		} else {
+			panic(err)
+		}
+	}
+	lost, err := datamanager.GetLostFollowers(app.db, app.session.GetInt(r, "userID"))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("null"))
+			return
+		} else {
+			panic(err)
+		}
+	}
+
+	// I'm not following back
+
+	im_not := datamanager.Difference(ss1, ss2)
+	count_im_not := len(im_not)
+	fmt.Print(count_im_not)
+	// Not following me back
+
+	not := datamanager.Difference(ss2, ss1)
+	count_not := len(not)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"New":        new,
+		"Lost":       lost,
+		"Not":        not,
+		"NotCount":   count_not,
+		"ImNot":      im_not,
+		"CountImNot": count_im_not,
+	})
 }
